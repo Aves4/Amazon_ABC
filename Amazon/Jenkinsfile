@@ -1,2 +1,37 @@
-// Added feature 1
-add 1
+pipeline{
+    agent any
+    environment{
+    GIT_BRANCH = 'master'
+    URL = 'https://github.com/Aves4/Amazon_ABC.git'
+    }
+    stages{
+        stage('clone project'){
+            steps{
+                git branch:"${GIT_BRANCH}", url:"${URL}"
+            }
+        }
+        stage('compile'){
+            steps{
+                    sh 'mvn compile'
+            }
+        }
+        stage('test'){
+            steps{
+                    sh 'mvn test'
+            }
+        }
+        stage('build'){
+            steps{
+                    sh 'mvn clean install'   
+            }
+        }
+    }
+    post{
+        success{
+            echo "Build Successfull"
+        }
+        failure{
+            echo "Build Failed"
+        }
+    }
+}
