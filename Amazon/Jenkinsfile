@@ -12,17 +12,23 @@ pipeline{
         }
         stage('compile'){
             steps{
+                dir('Amazon'){
                     sh 'mvn compile'
+                }
             }
         }
         stage('test'){
             steps{
+                dir('Amazon'){
                     sh 'mvn test'
+                }
             }
         }
         stage('build'){
             steps{
-                    sh 'mvn clean install'   
+                dir('Amazon'){
+                    sh 'mvn clean install'
+                }
             }
         }
     }
