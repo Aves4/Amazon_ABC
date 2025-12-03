@@ -4,6 +4,7 @@ pipeline{
     environment{
     GIT_BRANCH = 'master'
     url = 'https://github.com/Aves4/Amazon_ABC.git'
+    SLACK_WEBHOOK = 'https://hooks.slack.com/services/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'
     }
     stages{
         stage('clone project'){
@@ -35,10 +36,18 @@ pipeline{
     }
     post{
         success{
-            echo "Build Successfull"
+            sh """
+            curl -X POST -H 'Content-type: application/json' \
+            --data '{"text": "Build SUCCESS: ${JOB_NAME} #${BUILD_NUMBER}"}' \
+            $SLACK_WEBHOOK
+            """
         }
         failure{
-            echo "Build Failed"
+            sh """
+            curl -X POST -H 'Content-type: application/json' \
+            --data '{"text": "Build FAILED: ${JOB_NAME} #${BUILD_NUMBER}"}' \
+            $SLACK_WEBHOOK
+            """
         }
     }
 }
