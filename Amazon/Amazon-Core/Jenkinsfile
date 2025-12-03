@@ -34,37 +34,21 @@ pipeline{
             }
         }
     }
-    post{
-        success{
-            sh """
-            curl -X POST -H 'Content-type: application/json' \
-            --data '{ "text": "Build SUCCESS: ${JOB_NAME} #${BUILD_NUMBER}"}' \
-            $SLACK_WEBHOOK
-            """
-        }
-        failure{
-            sh """
-            curl -X POST -H 'Content-type: application/json' \
-            --data '{ "text": "Build FAILED: ${JOB_NAME} #${BUILD_NUMBER}"}' \
-            $SLACK_WEBHOOK
-            """
-        }
+    post {
+    success {
+        sh """
+        curl -X POST -H 'Content-type: application/json' \
+        --data '{ "text": "Build SUCCESS: ${JOB_NAME} #${BUILD_NUMBER}" }' \
+        $SLACK_WEBHOOK
+        """
+    }
+    failure {
+        sh """
+        curl -X POST -H 'Content-type: application/json' \
+        --data '{ "text": "Build FAILED: ${JOB_NAME} #${BUILD_NUMBER}" }' \
+        $SLACK_WEBHOOK
+        """
     }
 }
+}
 
-// post {
-//         success {
-//             sh """
-//             curl -X POST -H 'Content-type: application/json' \
-//             --data '{ "text": "Build SUCCESS: ${JOB_NAME} #${BUILD_NUMBER}" }' \
-//             $SLACK_WEBHOOK
-//             """
-//         }
-
-//         failure {
-//             sh """
-//             curl -X POST -H 'Content-type: application/json' \
-//             --data '{ "text": "Build FAILED: ${JOB_NAME} #${BUILD_NUMBER}" }' \
-//             $SLACK_WEBHOOK
-//             """
-//         }
