@@ -12,13 +12,26 @@ pipeline {
         WAR_BACKUP_DIR = "backup"
     }
 
+   
+
     stages {
 
-        // stage('Checkout') {
-        //     steps {
-        //         git branch: 'main', url: 'https://github.com/Aves4/Amazon_ABC.git'
-        //     }
-        // }
+         stage('Select Environment') {
+            steps {
+                script {
+                    def BRANCH = env.BRANCH_NAME.toLowerCase()
+
+                    DEPLOY_ENV =
+                        (BRANCH.startsWith('dev'))  ? 'dev'  :
+                        (BRANCH.startsWith('qa'))   ? 'qa'   :
+                        (BRANCH.startsWith('prod') || BRANCH == 'main') ? 'prod' :
+                                                                         'dev'
+
+                    echo "Branch Name: ${BRANCH}"
+                    echo "Selected Environment: ${DEPLOY_ENV}"
+                }
+            }
+        }
 
         stage('Compile') {
             steps {
@@ -70,7 +83,9 @@ pipeline {
             steps {
                 script {
                     
-                    // very simple environment → host mapping
+                    def BRANCH = env.BRANCH_NAME.toLowerCase()
+
+                    
                     def HOST = (params.DEPLOY_ENV == 'dev')  ? "192.168.13.128:8085"  :
                                (params.DEPLOY_ENV == 'qa')   ? "192.168.13.128:8089"   :
                                                                  "192.168.13.128:8083"
