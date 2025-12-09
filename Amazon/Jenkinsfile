@@ -62,20 +62,21 @@ pipeline {
         stage('Deploy to Tomcat') {
             steps {
                 script {
+                    
                     // very simple environment → host mapping
-                    def HOST = (params.DEPLOY_ENV == 'dev')  ? "http://192.168.13.128:8085"  :
-                               (params.DEPLOY_ENV == 'qa')   ? "http://192.168.13.128:8089"   :
-                                                                 "http://192.168.13.128:8083"
+                    def HOST = (params.DEPLOY_ENV == 'dev')  ? "192.168.13.128:8085"  :
+                               (params.DEPLOY_ENV == 'qa')   ? "192.168.13.128:8089"   :
+                                                                 "192.168.13.128:8083"
 
-                    withCredentials([usernamePassword(credentialsId: local tomcat, usernameVariable: 'USER', passwordVariable: 'PASS')]) { //USER , PASS is jenkins variables we do not need to replace with ACTUAL values
+                    withCredentials([usernamePassword(credentialsId: 'local tomcat', usernameVariable: 'USER', passwordVariable: 'PASS')]) { //USER , PASS is jenkins variables we do not need to replace with ACTUAL values
 
                         sh """
                             echo "Undeploy old version"
-                            curl -s -u $USER:$PASS "http://$HOST:8080/manager/text/undeploy?path=/amazon" || true
+                            curl -s -u $USER:$PASS "http://$HOST/manager/text/undeploy?path=/amazon" || true
 
                             echo "Deploying new WAR"
                             curl -s -u $USER:$PASS --upload-file target/*.war \
-                               "http://$HOST:8080/manager/text/deploy?path=/amazon&update=true"
+                               "http://$HOST/manager/text/deploy?path=/amazon&update=true"
                         """
                     }
                 }
