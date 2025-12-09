@@ -1,53 +1,91 @@
-pipeline{
+pipeline {
     agent any
-    environment{
-    GIT_BRANCH = 'master'
-    url = 'https://github.com/Aves4/Amazon_ABC.git'
-    SLACK_WEBHOOK = 'https://hooks.slack.com/services/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'
-    }
-    stages{
-        stage('clone project'){
-            steps{
-                git branch:"${GIT_BRANCH}", url:"${url}"
-            }
-        }
-        stage('compile'){
-            steps{
-                dir('Amazon'){
-                    sh 'mvn compile'
-                }
-            }
-        }
-        stage('test'){
-            steps{
-                dir('Amazon'){
-                    sh 'mvn test'
-                }
-            }
-        }
-        stage('build'){
-            steps{
-                dir('Amazon'){
-                    sh 'mvn clean install'
-                }
-            }
-        }
-    }
-    post {
-    success {
-        sh """
-        curl -X POST -H 'Content-type: application/json' \
-        --data '{ "text": "Build SUCCESS: ${JOB_NAME} #${BUILD_NUMBER}" }' \
-        $SLACK_WEBHOOK
-        """
-    }
-    failure {
-        sh """
-        curl -X POST -H 'Content-type: application/json' \
-        --data '{ "text": "Build FAILED: ${JOB_NAME} #${BUILD_NUMBER}" }' \
-        $SLACK_WEBHOOK
-        """
-    }
-}
-}
 
+
+    parameters {
+        choice(name: 'DEPLOY_ENV', choices: ['dev', 'qa', 'prod'], description: 'Choose environment')
+    }
+
+    environment {
+        SONAR_CRED = "sonar-token"
+        TOMCAT_CRED = "tomcat-creds"
+        WAR_BACKUP_DIR = "backup"
+    }
+
+    stages {
+
+        // stage('Checkout') {
+        //     steps {
+        //         git branch: 'main', url: 'https://github.com/Aves4/Amazon_ABC.git'
+        //     }
+        // }
+
+        stage('Compile') {
+            steps {
+                sh 'mvn clean compile -B' // batch mode, jenkins will not interactive question during build (do this or not ...)
+            }
+        }
+
+        stage('Unit Test') {
+            steps {
+                sh 'mvn test -B'
+                junit '**/target/surefire-reports/*.xml' // tells jenkins to go this path and read status failed or passed so that jenkins can display status of test case
+            }
+        }
+
+        // stage('SonarQube') {
+        //     steps {
+        //         withCredentials([string(credentialsId: SONAR_CRED, variable: 'TOKEN')]) {
+        //             sh '''
+        //                 mvn sonar:sonar \
+        //                   -Dsonar.projectKey=Amazon_ABC \
+        //                   -Dsonar.host.url=http://your-sonar:9000 \
+        //                   -Dsonar.login=$TOKEN
+        //             '''
+        //         }
+        //     }
+        // }
+
+        stage('Package WAR') {
+            steps {
+                sh 'mvn -DskipTests package -B'
+            }
+        }
+
+        stage('Backup WAR') {
+            steps {
+                sh "mkdir -p ${WAR_BACKUP_DIR}"
+                sh "cp target/*.war ${WAR_BACKUP_DIR}/amazon_${BUILD_NUMBER}.war"
+            }
+        }
+
+        stage('Deploy to Tomcat') {
+            steps {
+                script {
+                    // very simple environment → host mapping
+                    def HOST = (params.DEPLOY_ENV == 'dev')  ? "http://192.168.13.128:8085"  :
+                               (params.DEPLOY_ENV == 'qa')   ? "http://192.168.13.128:8089"   :
+                                                                 "http://192.168.13.128:8083"
+
+                    withCredentials([usernamePassword(credentialsId: local tomcat, usernameVariable: 'USER', passwordVariable: 'PASS')]) { //USER , PASS is jenkins variables we do not need to replace with ACTUAL values
+
+                        sh """
+                            echo "Undeploy old version"
+                            curl -s -u $USER:$PASS "http://$HOST:8080/manager/text/undeploy?path=/amazon" || true
+
+                            echo "Deploying new WAR"
+                            curl -s -u $USER:$PASS --upload-file target/*.war \
+                               "http://$HOST:8080/manager/text/deploy?path=/amazon&update=true"
+                        """
+                    }
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            archiveArtifacts artifacts: "${WAR_BACKUP_DIR}/*.war", onlyIfSuccessful: false
+        }
+    }
+}
