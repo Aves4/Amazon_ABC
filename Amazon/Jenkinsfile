@@ -4,6 +4,7 @@ pipeline {
 
     parameters {
         choice(name: 'DEPLOY_ENV', choices: ['dev', 'qa', 'prod'], description: 'Choose environment')
+        string(name: 'APP_VERSION', defaultValue: '1.0.0', description: 'Application Version')
     }
 
     environment {
@@ -51,23 +52,12 @@ pipeline {
             }
         }
 
-        // stage('SonarQube') {
-        //     steps {
-        //         withCredentials([string(credentialsId: SONAR_CRED, variable: 'TOKEN')]) {
-        //             sh '''
-        //                 mvn sonar:sonar \
-        //                   -Dsonar.projectKey=Amazon_ABC \
-        //                   -Dsonar.host.url=http://your-sonar:9000 \
-        //                   -Dsonar.login=$TOKEN
-        //             '''
-        //         }
-        //     }
-        // }
+    
 
         stage('Package WAR') {
             steps {
                 dir('Amazon'){
-                sh 'mvn -DskipTests package -B'
+                sh 'mvn -DskipTests -Dapp.version=${APP_VERSION} package -B '
                 }
             }
         }
