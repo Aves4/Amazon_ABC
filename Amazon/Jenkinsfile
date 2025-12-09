@@ -22,13 +22,18 @@ pipeline {
 
         stage('Compile') {
             steps {
-                sh 'mvn clean compile -B' // batch mode, jenkins will not interactive question during build (do this or not ...)
+                dir('Amazon'){
+                    sh 'mvn clean compile -B'
+                }
+                 // batch mode, jenkins will not interactive question during build (do this or not ...)
             }
         }
 
         stage('Unit Test') {
             steps {
+                dir('Amazon'){
                 sh 'mvn test -B'
+                }
                 junit '**/target/surefire-reports/*.xml' // tells jenkins to go this path and read status failed or passed so that jenkins can display status of test case
             }
         }
@@ -48,7 +53,9 @@ pipeline {
 
         stage('Package WAR') {
             steps {
+                dir('Amazon'){
                 sh 'mvn -DskipTests package -B'
+                }
             }
         }
 
