@@ -9,7 +9,7 @@ pipeline {
     }
     stage('Deploy'){
       steps{
-        sh 'cp Amazon-Web/Amazon.war  /home/azureuser/tomcat/apache-tomcat-9.0.115/webapps
+        sh 'cp Amazon-Web/Amazon.war  /home/azureuser/tomcat/apache-tomcat-9.0.115/webapps'
       }
     }
 
