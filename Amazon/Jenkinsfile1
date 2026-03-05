@@ -11,14 +11,14 @@ pipeline {
     }
     stage('Deploy'){
       steps{
-        sh 'cp Amazon-Web/*.war  /home/azureuser/tomcat/apache-tomcat-9.0.115/webapps'
+        sh 'scp -i /home/muhammedavez/A-vm-key /var/lib/jenkins/workspace/pipe-5.0.20265/Amazon/Amazon-Web/target/Amazon.war azureuser@20.109.176.109:/home/azureuser/tomcat/apache-tomcat-9.0.115/webapps'
       }
     }
 
     stage ('Restart Tomcat'){
       steps {
-        sh '/home/azureuser/tomcat/apache-tomcat-9.0.115/bin/shutdown.sh'
-        sh '/home/azureuser/tomcat/apache-tomcat-9.0.115/bin/startup.sh'  
+        sh 'scp -i azureuser@20.109.176.109 "/home/azureuser/tomcat/apache-tomcat-9.0.115/bin/shutdown.sh"'
+        sh 'scp -i azureuser@20.109.176.109 "/home/azureuser/tomcat/apache-tomcat-9.0.115/bin/startup.sh"'  
       }
     }
   }
