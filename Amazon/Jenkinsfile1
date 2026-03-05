@@ -1,0 +1,23 @@
+pipeline {
+  agent any
+
+  stages {
+    stage('Build){
+      steps{
+          sh 'mvn clean package'
+      }
+    }
+    stage('Deploy'){
+      steps{
+        sh 'cp Amazon-Web/Amazon.war  /home/azureuser/tomcat/apache-tomcat-9.0.115/webapps
+      }
+    }
+
+    stage ('Restart Tomcat'){
+      steps {
+        sh '/home/azureuser/tomcat/apache-tomcat-9.0.115/bin/shutdown.sh'
+        sh '/home/azureuser/tomcat/apache-tomcat-9.0.115/bin/startup.sh'  
+      }
+    }
+  
+}
